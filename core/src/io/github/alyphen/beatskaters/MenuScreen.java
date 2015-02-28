@@ -1,4 +1,11 @@
 package io.github.alyphen.beatskaters;
 
-public class MenuScreen {
+import com.badlogic.gdx.ScreenAdapter;
+
+public class MenuScreen extends ScreenAdapter {
+
+    @Override
+    public void render(float delta) {
+        
+    }
 }

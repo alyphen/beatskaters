@@ -22,6 +22,7 @@ public class GameScreen extends ScreenAdapter {
     private static final float MAX_VELOCITY = 100F;
     private static final float MAX_ANGLE = (float) PI / 4;
     private static final float MIN_ANGLE = - (float) PI / 4;
+    private static final float CAMERA_SPEED = 3F;
     
     private World world;
     private OrthographicCamera camera;
@@ -84,7 +85,7 @@ public class GameScreen extends ScreenAdapter {
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1); // Clear screen with black first (0 red, 0 green, 0 blue, 1 alpha)
         Gdx.gl.glClear(GL_COLOR_BUFFER_BIT);
-        camera.position.set(player.getPosition().x, player.getPosition().y, 0);
+        camera.position.set(camera.position.x + ((player.getPosition().x - camera.position.x) * delta * CAMERA_SPEED), camera.position.y + ((player.getPosition().y - camera.position.y) * delta * CAMERA_SPEED), 0);
         camera.update();
         debugRenderer.render(world, camera.combined);
         if (player.getAngle() >= MIN_ANGLE && player.getAngle() <= MAX_ANGLE) {
@@ -196,5 +197,8 @@ public class GameScreen extends ScreenAdapter {
             }
         }
     }
-    
+
+    public void setLevel(String level) {
+        this.level = level;
+    }
 }
