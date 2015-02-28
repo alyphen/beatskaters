@@ -6,6 +6,7 @@ import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Array;
 
 import static com.badlogic.gdx.Input.Keys.UP;
 import static com.badlogic.gdx.Input.Keys.W;
@@ -40,7 +41,7 @@ public class GameScreen extends ScreenAdapter {
         camera.setToOrtho(false, 800, 600);
         debugRenderer = new Box2DDebugRenderer(); // This won't be used in the finished version
         accumulator = 0F;
-        createObjects();
+        populateLevel();
         Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
             public boolean keyDown(int keycode) {
@@ -81,12 +82,6 @@ public class GameScreen extends ScreenAdapter {
             world.step(TIME_STEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
             accumulator -= TIME_STEP;
         }
-    }
-    
-    private void createObjects() {
-        createFloor();
-        createPlayer();
-        populateLevel();
     }
     
     private void createFloor() {
@@ -144,6 +139,15 @@ public class GameScreen extends ScreenAdapter {
     }
     
     private void populateLevel() {
+        // Clear the world for the new one to take it's place
+        Array<Body> bodies = new Array<>();
+        world.getBodies(bodies);
+        for (Body body : bodies) {
+            world.destroyBody(body);
+        }
+        // Place new objects in the world
+        createFloor();
+        createPlayer();
         int x = 0;
         for (char c : level.toCharArray()) {
             switch (c) {
