@@ -34,7 +34,7 @@ public class GameScreen extends ScreenAdapter {
 
     public GameScreen() {
         Box2D.init();
-        level = "________U_D____U__U_____D___U___U___F";
+        level = "________U______D_______U______U_____D____U____U____F";
         world = new World(new Vector2(0, -9.8F), true); // 9.8 ms^2 gravity downwards, objects allowed to sleep
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 600);
@@ -129,7 +129,14 @@ public class GameScreen extends ScreenAdapter {
     }
     
     private void createObstacleDown(float x) {
-
+        BodyDef obstacleDef = new BodyDef();
+        obstacleDef.type = StaticBody;
+        obstacleDef.position.set(x, 1600);
+        Body obstacle = world.createBody(obstacleDef);
+        PolygonShape obstacleBox = new PolygonShape();
+        obstacleBox.setAsBox(16, 1440);
+        obstacle.createFixture(obstacleBox, 0);
+        obstacleBox.dispose();
     }
     
     private void createFinish(float x) {
