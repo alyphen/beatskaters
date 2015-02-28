@@ -12,6 +12,7 @@ import static com.badlogic.gdx.Input.Keys.W;
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.physics.box2d.BodyDef.BodyType.DynamicBody;
 import static com.badlogic.gdx.physics.box2d.BodyDef.BodyType.StaticBody;
+import static java.lang.Math.PI;
 import static java.lang.Math.min;
 
 public class GameScreen extends ScreenAdapter {
@@ -20,16 +21,20 @@ public class GameScreen extends ScreenAdapter {
     private static final int VELOCITY_ITERATIONS = 6;
     private static final int POSITION_ITERATIONS = 2;
     private static final float MAX_VELOCITY = 100F;
+    private static final float MAX_ANGLE = (float) PI / 4;
+    private static final float MIN_ANGLE = - (float) PI / 4;
     
     private World world;
     private OrthographicCamera camera;
     private Box2DDebugRenderer debugRenderer;
     private float accumulator;
+    private String level;
     
     private Body player;
 
     public GameScreen() {
         Box2D.init();
+        level = "________U_D____U__U_____D___U___U___F";
         world = new World(new Vector2(0, -9.8F), true); // 9.8 ms^2 gravity downwards, objects allowed to sleep
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 600);
@@ -54,8 +59,17 @@ public class GameScreen extends ScreenAdapter {
         camera.position.set(player.getPosition().x, player.getPosition().y, 0);
         camera.update();
         debugRenderer.render(world, camera.combined);
-        if (player.getLinearVelocity().x < MAX_VELOCITY) {
-            player.applyLinearImpulse(500, 0, player.getPosition().x, player.getPosition().y, true);
+        if (player.getAngle() >= MIN_ANGLE && player.getAngle() <= MAX_ANGLE) {
+            if (player.getLinearVelocity().x < MAX_VELOCITY) {
+                player.applyLinearImpulse(500, 0, player.getPosition().x, player.getPosition().y, true);
+            }
+        } else {
+            player.getLinearVelocity().x = 0;
+            if (player.getAngle() > MAX_ANGLE) {
+                player.applyAngularImpulse(-5000, true);
+            } else if (player.getAngle() < MIN_ANGLE) {
+                player.applyAngularImpulse(5000, true);
+            }
         }
         doPhysicsStep(delta); // Do this last so that objects are rendered consistently
     }
@@ -72,15 +86,16 @@ public class GameScreen extends ScreenAdapter {
     private void createObjects() {
         createFloor();
         createPlayer();
+        populateLevel();
     }
     
     private void createFloor() {
         BodyDef floorDef = new BodyDef();
         floorDef.type = StaticBody;
-        floorDef.position.set(camera.viewportWidth / 2, 64);
+        floorDef.position.set(0, 32);
         Body floor = world.createBody(floorDef);
         PolygonShape floorBox = new PolygonShape();
-        floorBox.setAsBox(camera.viewportWidth / 2, 64); // Takes half-width and half-height as parameters
+        floorBox.setAsBox(level.length() * 32, 64); // Takes half-width and half-height as parameters
         floor.createFixture(floorBox, 0); // Static bodies have zero density
         floorBox.dispose();
     }
@@ -100,6 +115,48 @@ public class GameScreen extends ScreenAdapter {
         player.createFixture(fixtureDef);
         player.setGravityScale(50F);
         playerBox.dispose();
+    }
+    
+    private void createObstacleUp(float x) {
+        BodyDef obstacleDef = new BodyDef();
+        obstacleDef.type = StaticBody;
+        obstacleDef.position.set(x, 112);
+        Body obstacle = world.createBody(obstacleDef);
+        PolygonShape obstacleBox = new PolygonShape();
+        obstacleBox.setAsBox(16, 16);
+        obstacle.createFixture(obstacleBox, 0);
+        obstacleBox.dispose();
+    }
+    
+    private void createObstacleDown(float x) {
+
+    }
+    
+    private void createFinish(float x) {
+        
+    }
+    
+    private void populateLevel() {
+        int x = 0;
+        for (char c : level.toCharArray()) {
+            switch (c) {
+                case '_':
+                    x += 32;
+                    break;
+                case 'U':
+                    createObstacleUp(x);
+                    x += 32;
+                    break;
+                case 'D':
+                    createObstacleDown(x);
+                    x += 32;
+                    break;
+                case 'F':
+                    createFinish(x);
+                    x += 32;
+                    break;
+            }
+        }
     }
     
 }
