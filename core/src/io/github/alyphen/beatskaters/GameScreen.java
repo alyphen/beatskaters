@@ -169,10 +169,6 @@ public class GameScreen extends ScreenAdapter {
         obstacleBox.dispose();
     }
     
-    private void createFinish(float x) {
-        
-    }
-    
     private void populateLevel() {
         // Clear the world for the new one to take it's place
         Array<Body> bodies = new Array<>();
@@ -195,10 +191,6 @@ public class GameScreen extends ScreenAdapter {
                     break;
                 case 'D':
                     createObstacleDown(x);
-                    x += 32;
-                    break;
-                case 'F':
-                    createFinish(x);
                     x += 32;
                     break;
             }
