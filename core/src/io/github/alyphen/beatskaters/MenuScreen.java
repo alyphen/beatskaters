@@ -17,6 +17,7 @@ public class MenuScreen extends ScreenAdapter {
     
     private BeatSkaters game;
     
+    private Texture background;
     private TextureRegion title;
     private TextureRegion buttonIcon;
     private Music music;
@@ -26,6 +27,7 @@ public class MenuScreen extends ScreenAdapter {
     
     public MenuScreen(BeatSkaters game) {
         this.game = game;
+        background = new Texture(Gdx.files.internal("background.png"));
         Texture titleTexture = new Texture(Gdx.files.internal("title.png"));
         title = new TextureRegion(titleTexture, 0, 0, 640, 128);
         Texture buttonTexture = new Texture(Gdx.files.internal("menu_button.png"));
@@ -73,6 +75,7 @@ public class MenuScreen extends ScreenAdapter {
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL_COLOR_BUFFER_BIT);
         game.getSpriteBatch().begin();
+        game.getSpriteBatch().draw(background, 0, 0, 800, 600);
         game.getSpriteBatch().draw(title, 0, 472);
         int x = 144;
         int i = 1;

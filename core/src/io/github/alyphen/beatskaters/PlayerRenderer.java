@@ -42,7 +42,7 @@ public class PlayerRenderer {
         fallenRightTexture = new TextureRegion(playerTexture, 48, 64, 48, 64);
         jumpingTexture = new TextureRegion(playerTexture, 48, 0, 48, 64);
         jumpedTexture = new TextureRegion(playerTexture, 96, 0, 48, 64);
-        crouchingTexture = new TextureRegion(playerTexture, 144, 0, 48, 64);
+        crouchingTexture = new TextureRegion(playerTexture, 144, 31, 48, 33);
         skatingSprite = new Box2DSprite(skatingTexture);
         fallingLeftSprite = new Box2DSprite(fallingLeftTexture);
         fallenLeftSprite = new Box2DSprite(fallenLeftTexture);
