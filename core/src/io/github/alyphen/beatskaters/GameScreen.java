@@ -2,6 +2,7 @@ package io.github.alyphen.beatskaters;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
@@ -28,24 +29,23 @@ public class GameScreen extends ScreenAdapter {
     private OrthographicCamera camera;
     private Box2DDebugRenderer debugRenderer;
     private float accumulator;
-    private String level;
+    private Level level;
     private Body player;
+    private InputProcessor inputProcessor;
 
     public GameScreen() {
         Box2D.init();
-        level = "________U______D_______U______U_____D____U____U____F";
         world = new World(new Vector2(0, -9.8F), true); // 9.8 ms^2 gravity downwards, objects allowed to sleep
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 600);
         debugRenderer = new Box2DDebugRenderer(); // This won't be used in the finished version
         accumulator = 0F;
-        populateLevel();
-        Gdx.input.setInputProcessor(new InputAdapter() {
+        inputProcessor = new InputAdapter() {
             @Override
             public boolean keyDown(int keycode) {
-                if (keycode == UP || keycode == W) {
+                if (keycode == UP || keycode == W) { // Jumping
                     player.applyLinearImpulse(0, 15000, player.getPosition().x, player.getPosition().y, true);
-                } else if (keycode == DOWN || keycode == S) {
+                } else if (keycode == DOWN || keycode == S) { // Crouching
                     player.destroyFixture(player.getFixtureList().get(0));
                     PolygonShape duckingBox = new PolygonShape();
                     duckingBox.setAsBox(32, 24);
@@ -56,6 +56,7 @@ public class GameScreen extends ScreenAdapter {
                     duckingFixtureDef.restitution = 0.1F;
                     player.createFixture(duckingFixtureDef);
                     duckingBox.dispose();
+                    // Translation so the bounding box scales around the bottom of the image.
                     player.setTransform(player.getPosition().x - (float) (24F * sin(player.getAngle())), player.getPosition().y - (float) (24F * cos(player.getAngle())), player.getAngle());
                 }
                 return true;
@@ -63,7 +64,7 @@ public class GameScreen extends ScreenAdapter {
 
             @Override
             public boolean keyUp(int keycode) {
-                if (keycode == DOWN || keycode == S) {
+                if (keycode == DOWN || keycode == S) { // Stop crouching
                     player.destroyFixture(player.getFixtureList().get(0));
                     PolygonShape playerBox = new PolygonShape();
                     playerBox.setAsBox(32, 48); // half-width and half-height again
@@ -74,11 +75,12 @@ public class GameScreen extends ScreenAdapter {
                     playerFixtureDef.restitution = 0.1F;
                     player.createFixture(playerFixtureDef);
                     playerBox.dispose();
+                    // Translation so the bounding box scales around the bottom of the image.
                     player.setTransform(player.getPosition().x + (float) (24F * sin(player.getAngle())), player.getPosition().y + (float) (24F * cos(player.getAngle())), player.getAngle());
                 }
                 return true;
             }
-        });
+        };
     }
     
     @Override
@@ -100,6 +102,11 @@ public class GameScreen extends ScreenAdapter {
                 player.applyAngularImpulse(5000, true);
             }
         }
+        if (player.getLinearVelocity().x < 25F) {
+            if (level.getMusic().isPlaying()) level.getMusic().pause();
+        } else {
+            if (!level.getMusic().isPlaying()) level.getMusic().play();
+        }
         doPhysicsStep(delta); // Do this last so that objects are rendered consistently
     }
     
@@ -118,7 +125,7 @@ public class GameScreen extends ScreenAdapter {
         floorDef.position.set(0, 32);
         Body floor = world.createBody(floorDef);
         PolygonShape floorBox = new PolygonShape();
-        floorBox.setAsBox(level.length() * 32, 64); // Takes half-width and half-height as parameters
+        floorBox.setAsBox(level.getObstacles().length() * 32, 64); // Takes half-width and half-height as parameters
         floor.createFixture(floorBox, 0); // Static bodies have zero density
         floorBox.dispose();
     }
@@ -177,7 +184,7 @@ public class GameScreen extends ScreenAdapter {
         createFloor();
         createPlayer();
         int x = 0;
-        for (char c : level.toCharArray()) {
+        for (char c : level.getObstacles().toCharArray()) {
             switch (c) {
                 case '_':
                     x += 32;
@@ -198,7 +205,10 @@ public class GameScreen extends ScreenAdapter {
         }
     }
 
-    public void setLevel(String level) {
+    public void setLevel(Level level) {
         this.level = level;
+        level.getMusic().play();
+        populateLevel();
+        Gdx.input.setInputProcessor(inputProcessor);
     }
 }
