@@ -8,11 +8,13 @@ public class Level {
     private String obstacles;
     private Music music;
     private Texture background;
+    private float bestTime;
     
     public Level(String obstacles, Music music, Texture background) {
         this.obstacles = obstacles;
         this.music = music;
         this.background = background;
+        bestTime = -1F;
     }
 
     public String getObstacles() {
@@ -25,6 +27,14 @@ public class Level {
 
     public Texture getBackground() {
         return background;
+    }
+
+    public float getBestTime() {
+        return bestTime;
+    }
+
+    public void setBestTime(float bestTime) {
+        this.bestTime = bestTime;
     }
     
 }

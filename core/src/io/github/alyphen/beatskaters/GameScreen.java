@@ -6,10 +6,13 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
+import net.dermetfan.gdx.graphics.g2d.Box2DSprite;
+
+import java.util.Random;
 
 import static com.badlogic.gdx.Input.Keys.*;
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
@@ -23,28 +26,29 @@ public class GameScreen extends ScreenAdapter {
     private static final int VELOCITY_ITERATIONS = 6;
     private static final int POSITION_ITERATIONS = 2;
     private static final float MAX_VELOCITY = 100F;
-    private static final float MAX_ANGLE = (float) PI / 4;
-    private static final float MIN_ANGLE = - (float) PI / 4;
+    public static final float MAX_ANGLE = (float) PI / 4;
+    public static final float MIN_ANGLE = - (float) PI / 4;
     private static final float CAMERA_SPEED = 3F;
     
     private BeatSkaters game;
     
     private World world;
     private OrthographicCamera camera;
-    //private Box2DDebugRenderer debugRenderer;
+    private Box2DDebugRenderer debugRenderer;
     private float accumulator;
     private Level level;
     private Body player;
     private InputProcessor inputProcessor;
     private PlayerRenderer playerRenderer;
+    private float timer;
     
     private Texture obstaclesTexture;
-    private Animation obstacleShadowCatAnimation;
-    private Animation obstacleDogAnimation;
-    private Animation obstacleTrafficConeAnimation;
-    private Animation obstacleCatScratcherAnimation;
-    private Animation obstacleBoxDogAnimation;
-    private Animation obstacleWreckingBallAnimation;
+    private TextureRegion obstacleShadowCatTextureRegion;
+    private TextureRegion obstacleDogTextureRegion;
+    private TextureRegion obstacleTrafficConeTextureRegion;
+    private TextureRegion obstacleCatScratcherTextureRegion;
+    private TextureRegion obstacleBoxDogTextureRegion;
+    private TextureRegion obstacleWreckingBallTextureRegion;
 
     public GameScreen(BeatSkaters game) {
         this.game = game;
@@ -52,16 +56,14 @@ public class GameScreen extends ScreenAdapter {
         world = new World(new Vector2(0, -9.8F), true); // 9.8 ms^2 gravity downwards, objects allowed to sleep
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 600);
-        camera.viewportWidth = 200;
-        camera.viewportHeight = 150;
-        //debugRenderer = new Box2DDebugRenderer(); // This won't be used in the finished version
+        camera.viewportWidth = 400;
+        camera.viewportHeight = 300;
+        debugRenderer = new Box2DDebugRenderer(); // This won't be used in the finished version
         accumulator = 0F;
         inputProcessor = new InputAdapter() {
             @Override
             public boolean keyDown(int keycode) {
-                if (keycode == UP || keycode == W) { // Jumping
-                    player.applyLinearImpulse(0, 15000, player.getPosition().x, player.getPosition().y, true);
-                } else if (keycode == DOWN || keycode == S) { // Crouching
+                if (keycode == DOWN || keycode == S) { // Crouching
                     player.destroyFixture(player.getFixtureList().get(0));
                     PolygonShape duckingBox = new PolygonShape();
                     duckingBox.setAsBox(32, 24);
@@ -80,7 +82,9 @@ public class GameScreen extends ScreenAdapter {
 
             @Override
             public boolean keyUp(int keycode) {
-                if (keycode == DOWN || keycode == S) { // Stop crouching
+                if (keycode == UP || keycode == W) { // Jumping
+                    player.applyLinearImpulse(0, 15000, player.getPosition().x, player.getPosition().y, true);
+                } else if (keycode == DOWN || keycode == S) { // Stop crouching
                     player.destroyFixture(player.getFixtureList().get(0));
                     PolygonShape playerBox = new PolygonShape();
                     playerBox.setAsBox(32, 48); // half-width and half-height again
@@ -98,7 +102,12 @@ public class GameScreen extends ScreenAdapter {
             }
         };
         obstaclesTexture = new Texture(Gdx.files.internal("enemies.png"));
-        
+        obstacleShadowCatTextureRegion = new TextureRegion(obstaclesTexture, 0, 0, 64, 64);
+        obstacleDogTextureRegion = new TextureRegion(obstaclesTexture, 64, 0, 32, 32);
+        obstacleTrafficConeTextureRegion = new TextureRegion(obstaclesTexture, 128, 0, 32, 32);
+        obstacleCatScratcherTextureRegion = new TextureRegion(obstaclesTexture, 256, 0, 32, 32);
+        obstacleBoxDogTextureRegion = new TextureRegion(obstaclesTexture, 160, 0, 32, 32);
+        obstacleWreckingBallTextureRegion = new TextureRegion(obstaclesTexture, 288, 0, 32, 384);
     }
     
     @Override
@@ -107,13 +116,20 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glClear(GL_COLOR_BUFFER_BIT);
         camera.position.set(camera.position.x + ((player.getPosition().x - camera.position.x) * delta * CAMERA_SPEED), camera.position.y + ((player.getPosition().y - camera.position.y) * delta * CAMERA_SPEED), 0);
         camera.update();
-        //debugRenderer.render(world, camera.combined);
         game.getSpriteBatch().setProjectionMatrix(camera.combined);
         game.getSpriteBatch().begin();
         for (int x = 0; x < level.getObstacles().length() * 32; x += level.getBackground().getWidth())
             game.getSpriteBatch().draw(level.getBackground(), x, 96);
         playerRenderer.render(game.getSpriteBatch());
+        Array<Body> bodies = new Array<>();
+        world.getBodies(bodies);
+        for (Body body : bodies) {
+            if (body.getUserData() != null && body.getUserData() instanceof Box2DSprite) {
+                ((Box2DSprite) body.getUserData()).draw(game.getSpriteBatch(), body);
+            }
+        }
         game.getSpriteBatch().end();
+        //debugRenderer.render(world, camera.combined);
         if (player.getAngle() >= MIN_ANGLE && player.getAngle() <= MAX_ANGLE) {
             if (player.getLinearVelocity().x < MAX_VELOCITY) {
                 player.applyLinearImpulse(500, 0, player.getPosition().x, player.getPosition().y, true);
@@ -132,6 +148,7 @@ public class GameScreen extends ScreenAdapter {
             if (!level.getMusic().isPlaying()) level.getMusic().play();
         }
         doPhysicsStep(delta); // Do this last so that objects are rendered consistently
+        timer += delta;
     }
     
     private void doPhysicsStep(float delta) {
@@ -181,17 +198,36 @@ public class GameScreen extends ScreenAdapter {
         obstacleBox.setAsBox(16, 16);
         obstacle.createFixture(obstacleBox, 0);
         obstacleBox.dispose();
+        Random random = new Random();
+        switch (random.nextInt(5)) {
+            case 0:
+                obstacle.setUserData(new Box2DSprite(obstacleShadowCatTextureRegion));
+                break;
+            case 1:
+                obstacle.setUserData(new Box2DSprite(obstacleDogTextureRegion));
+                break;
+            case 2:
+                obstacle.setUserData(new Box2DSprite(obstacleTrafficConeTextureRegion));
+                break;
+            case 3:
+                obstacle.setUserData(new Box2DSprite(obstacleCatScratcherTextureRegion));
+                break;
+            case 4:
+                obstacle.setUserData(new Box2DSprite(obstacleBoxDogTextureRegion));
+                break;
+        }
     }
     
     private void createObstacleDown(float x) {
         BodyDef obstacleDef = new BodyDef();
         obstacleDef.type = StaticBody;
-        obstacleDef.position.set(x, 1600);
+        obstacleDef.position.set(x, 400);
         Body obstacle = world.createBody(obstacleDef);
         PolygonShape obstacleBox = new PolygonShape();
-        obstacleBox.setAsBox(16, 1440);
+        obstacleBox.setAsBox(16, 240);
         obstacle.createFixture(obstacleBox, 0);
         obstacleBox.dispose();
+        obstacle.setUserData(new Box2DSprite(obstacleWreckingBallTextureRegion));
     }
     
     private void populateLevel() {
@@ -227,6 +263,10 @@ public class GameScreen extends ScreenAdapter {
         level.getMusic().play();
         populateLevel();
         Gdx.input.setInputProcessor(inputProcessor);
+        timer = 0F;
     }
-    
+
+    public float getTimer() {
+        return timer;
+    }
 }
