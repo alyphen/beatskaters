@@ -5,6 +5,8 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
@@ -25,20 +27,34 @@ public class GameScreen extends ScreenAdapter {
     private static final float MIN_ANGLE = - (float) PI / 4;
     private static final float CAMERA_SPEED = 3F;
     
+    private BeatSkaters game;
+    
     private World world;
     private OrthographicCamera camera;
-    private Box2DDebugRenderer debugRenderer;
+    //private Box2DDebugRenderer debugRenderer;
     private float accumulator;
     private Level level;
     private Body player;
     private InputProcessor inputProcessor;
+    private PlayerRenderer playerRenderer;
+    
+    private Texture obstaclesTexture;
+    private Animation obstacleShadowCatAnimation;
+    private Animation obstacleDogAnimation;
+    private Animation obstacleTrafficConeAnimation;
+    private Animation obstacleCatScratcherAnimation;
+    private Animation obstacleBoxDogAnimation;
+    private Animation obstacleWreckingBallAnimation;
 
-    public GameScreen() {
+    public GameScreen(BeatSkaters game) {
+        this.game = game;
         Box2D.init();
         world = new World(new Vector2(0, -9.8F), true); // 9.8 ms^2 gravity downwards, objects allowed to sleep
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 600);
-        debugRenderer = new Box2DDebugRenderer(); // This won't be used in the finished version
+        camera.viewportWidth = 200;
+        camera.viewportHeight = 150;
+        //debugRenderer = new Box2DDebugRenderer(); // This won't be used in the finished version
         accumulator = 0F;
         inputProcessor = new InputAdapter() {
             @Override
@@ -81,6 +97,8 @@ public class GameScreen extends ScreenAdapter {
                 return true;
             }
         };
+        obstaclesTexture = new Texture(Gdx.files.internal("enemies.png"));
+        
     }
     
     @Override
@@ -89,7 +107,13 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glClear(GL_COLOR_BUFFER_BIT);
         camera.position.set(camera.position.x + ((player.getPosition().x - camera.position.x) * delta * CAMERA_SPEED), camera.position.y + ((player.getPosition().y - camera.position.y) * delta * CAMERA_SPEED), 0);
         camera.update();
-        debugRenderer.render(world, camera.combined);
+        //debugRenderer.render(world, camera.combined);
+        game.getSpriteBatch().setProjectionMatrix(camera.combined);
+        game.getSpriteBatch().begin();
+        for (int x = 0; x < level.getObstacles().length() * 32; x += level.getBackground().getWidth())
+            game.getSpriteBatch().draw(level.getBackground(), x, 96);
+        playerRenderer.render(game.getSpriteBatch());
+        game.getSpriteBatch().end();
         if (player.getAngle() >= MIN_ANGLE && player.getAngle() <= MAX_ANGLE) {
             if (player.getLinearVelocity().x < MAX_VELOCITY) {
                 player.applyLinearImpulse(500, 0, player.getPosition().x, player.getPosition().y, true);
@@ -97,9 +121,9 @@ public class GameScreen extends ScreenAdapter {
         } else {
             player.getLinearVelocity().x = 0;
             if (player.getAngle() > MAX_ANGLE) {
-                player.applyAngularImpulse(-5000, true);
+                player.applyAngularImpulse(-7500, true);
             } else if (player.getAngle() < MIN_ANGLE) {
-                player.applyAngularImpulse(5000, true);
+                player.applyAngularImpulse(7500, true);
             }
         }
         if (player.getLinearVelocity().x < 25F) {
@@ -145,6 +169,7 @@ public class GameScreen extends ScreenAdapter {
         player.createFixture(playerFixtureDef);
         player.setGravityScale(50F);
         playerBox.dispose();
+        playerRenderer = new PlayerRenderer(player);
     }
     
     private void createObstacleUp(float x) {
@@ -203,4 +228,5 @@ public class GameScreen extends ScreenAdapter {
         populateLevel();
         Gdx.input.setInputProcessor(inputProcessor);
     }
+    
 }

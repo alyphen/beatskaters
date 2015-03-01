@@ -30,19 +30,19 @@ public class MenuScreen extends ScreenAdapter {
         title = new TextureRegion(titleTexture, 0, 0, 640, 128);
         Texture buttonTexture = new Texture(Gdx.files.internal("menu_button.png"));
         buttonIcon = new TextureRegion(buttonTexture, 0, 0, 64, 64);
+        Texture background = new Texture(Gdx.files.internal("citybackground.png"));
         levels = new Array<>();
-        levels.add(new Level("__________U_______D_______U___U___U___U___U___U___DDDDDDDDDDDDD______U___U___U___U", Gdx.audio.newMusic(Gdx.files.internal("level_1.ogg"))));
-        levels.add(new Level("__________", Gdx.audio.newMusic(Gdx.files.internal("level_2.ogg"))));
-        levels.add(new Level("__________", Gdx.audio.newMusic(Gdx.files.internal("level_3.ogg"))));
-        levels.add(new Level("__________", Gdx.audio.newMusic(Gdx.files.internal("level_4.ogg"))));
-        levels.add(new Level("__________", Gdx.audio.newMusic(Gdx.files.internal("level_5.ogg"))));
+        levels.add(new Level("__________U_______D_______U_____U_____U_____U_____DDDDDDDDDDDDD______U____U____U____U____U____U____DDDDDD____U____U____U", Gdx.audio.newMusic(Gdx.files.internal("level_1.ogg")), background));
+        levels.add(new Level("__________", Gdx.audio.newMusic(Gdx.files.internal("level_2.ogg")), background));
+        levels.add(new Level("__________", Gdx.audio.newMusic(Gdx.files.internal("level_3.ogg")), background));
+        levels.add(new Level("__________", Gdx.audio.newMusic(Gdx.files.internal("level_4.ogg")), background));
+        levels.add(new Level("__________", Gdx.audio.newMusic(Gdx.files.internal("level_5.ogg")), background));
         music = Gdx.audio.newMusic(Gdx.files.internal("menu.ogg"));
         music.setLooping(true);
         music.play();
         inputProcessor = new InputAdapter() {
             @Override
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                Gdx.app.log("Mouse", "Pressed at " + screenX + ", " + screenY);
                 BeatSkaters game = MenuScreen.this.game;
                 int x = 144;
                 for (Level level : levels) {

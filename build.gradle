@@ -2,6 +2,7 @@ buildscript {
     repositories {
         mavenCentral()
         jcenter()
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
     }
     dependencies {
         classpath 'de.richsource.gradle.plugins:gwt-gradle-plugin:0.6'
@@ -63,6 +64,9 @@ project(":core") {
     dependencies {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+        compile 'net.dermetfan.libgdx-utils:libgdx-utils:0.9.1'
+        compile 'net.dermetfan.libgdx-utils:libgdx-utils-box2d:0.9.1' // Box2D module
+        compile 'net.dermetfan.libgdx-utils:libgdx-utils-box2d-gwt:VERSION:0.9.1' // Box2D module GWT backend (sources)
     }
 }
 

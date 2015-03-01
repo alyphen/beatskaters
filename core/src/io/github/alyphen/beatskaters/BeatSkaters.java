@@ -17,7 +17,7 @@ public class BeatSkaters extends Game {
 		spriteBatch = new SpriteBatch();
 		font = new BitmapFont();
 		menuScreen = new MenuScreen(this);
-		gameScreen = new GameScreen();
+		gameScreen = new GameScreen(this);
 		setScreen(menuScreen);
 	}
 
